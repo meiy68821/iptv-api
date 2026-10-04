@@ -37,7 +37,7 @@ ok "已停止并移除开机服务。"
 if [ -f "$UNM_HOME/.pac_service" ]; then
 	SERVICE="$(cat "$UNM_HOME/.pac_service")"
 	sudo networksetup -setautoproxystate "$SERVICE" off || true
-	ok "已关闭“$SERVICE”的自动代理。"
+	ok "已关闭“${SERVICE}”的自动代理。"
 fi
 
 # 3. 从系统钥匙串移除 CA
@@ -52,11 +52,11 @@ fi
 
 # 4. 删除安装目录
 if [ -d "$UNM_HOME" ]; then
-	if ask_yes "是否删除安装目录 $UNM_HOME（含证书、配置和日志）？[y/N]" N; then
+	if ask_yes "是否删除安装目录 ${UNM_HOME}（含证书、配置和日志）？[y/N]" N; then
 		rm -rf "$UNM_HOME"
-		ok "已删除 $UNM_HOME。"
+		ok "已删除 ${UNM_HOME}。"
 	else
-		warn "已保留 $UNM_HOME。"
+		warn "已保留 ${UNM_HOME}。"
 	fi
 fi
 

@@ -76,7 +76,7 @@ else
 	curl -fsSL -o "$tmpdir/SHASUMS256.txt" "https://nodejs.org/dist/${NODE_VERSION}/SHASUMS256.txt"
 	expected="$(awk -v f="$pkg" '$2 == f { print $1 }' "$tmpdir/SHASUMS256.txt")"
 	actual="$(shasum -a 256 "$tmpdir/$pkg" | awk '{ print $1 }')"
-	[ -n "$expected" ] && [ "$expected" = "$actual" ] || die "Node.js 安装包校验失败（期望 $expected，实际 $actual），已中止。"
+	[ -n "$expected" ] && [ "$expected" = "$actual" ] || die "Node.js 安装包校验失败（期望 ${expected}，实际 ${actual}），已中止。"
 	ok "安装包 SHA256 校验通过。"
 	sudo installer -pkg "$tmpdir/$pkg" -target /
 	rm -rf "$tmpdir"
@@ -94,7 +94,7 @@ npm_args=(install --prefix "$UNM_HOME" --no-fund --no-audit @unblockneteasemusic
 [ -n "$NPM_REGISTRY" ] && npm_args+=(--registry "$NPM_REGISTRY")
 PATH="$(dirname "$NODE_BIN"):$PATH" "$NPM_BIN" "${npm_args[@]}"
 APP_JS="$UNM_HOME/node_modules/@unblockneteasemusic/server/precompiled/app.js"
-[ -f "$APP_JS" ] || die "安装后找不到 $APP_JS。"
+[ -f "$APP_JS" ] || die "安装后找不到 ${APP_JS}。"
 UNM_VERSION="$("$NODE_BIN" -p "require('$UNM_HOME/node_modules/@unblockneteasemusic/server/package.json').version")"
 ok "UNM $UNM_VERSION 已安装。"
 
@@ -186,7 +186,7 @@ EOF
 chmod 755 "$START"
 
 # ---------- 6. launchd 开机服务 ----------
-info "注册开机服务 $LABEL……"
+info "注册开机服务 ${LABEL}……"
 tmp_plist="$(mktemp)"
 cat > "$tmp_plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -235,7 +235,7 @@ for _ in $(seq 1 20); do
 	sleep 1
 done
 if [ "$started" = 1 ]; then
-	ok "UNM 已在后台运行，端口 $PORTS。"
+	ok "UNM 已在后台运行，端口 ${PORTS}。"
 else
 	warn "未能确认服务启动，请查看日志：$UNM_HOME/logs/unm.err.log"
 fi
@@ -254,7 +254,7 @@ echo
 SERVICE="$(active_service || true)"
 if [ -n "$SERVICE" ]; then
 	info "当前联网的网络服务：$SERVICE"
-	if ask_yes "是否为“$SERVICE”设置自动代理 $PAC_URL（只有网易云域名走 UNM）？[y/N]" N; then
+	if ask_yes "是否为“${SERVICE}”设置自动代理 ${PAC_URL}（只有网易云域名走 UNM）？[y/N]" N; then
 		sudo networksetup -setautoproxyurl "$SERVICE" "$PAC_URL"
 		sudo networksetup -setautoproxystate "$SERVICE" on
 		printf '%s\n' "$SERVICE" > "$UNM_HOME/.pac_service"
