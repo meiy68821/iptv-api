@@ -242,13 +242,33 @@ fi
 
 # ---------- 7. PAC 自动代理 ----------
 PAC_URL="http://127.0.0.1:${HTTP_PORT}/proxy.pac"
+# 列出“服务名<TAB>设备名”，按系统的服务顺序
+service_pairs() {
+	networksetup -listnetworkserviceorder | awk '
+		/^\([0-9]+\) / { sub(/^\([0-9]+\) /, ""); name = $0; next }
+		/^\(\*\) / { name = ""; next }    # 已停用的服务
+		/Device: / {
+			dev = $0; sub(/.*Device: /, "", dev); sub(/\).*/, "", dev)
+			if (name != "" && dev != "") print name "\t" dev
+			name = ""
+		}'
+}
 active_service() {
-	local dev
-	dev="$(route -n get default 2>/dev/null | awk '/interface:/ { print $2 }')"
-	[ -n "$dev" ] || return 1
-	networksetup -listnetworkserviceorder | awk -v dev="$dev" '
-		/^\([0-9]+\)/ { sub(/^\([0-9]+\) /, ""); name = $0 }
-		$0 ~ "Device: " dev "\\)" { print name; exit }'
+	local default_dev name dev
+	default_dev="$(route -n get default 2>/dev/null | awk '/interface:/ { print $2 }')"
+	# 先找默认路由所在的网卡；开着 VPN / 代理软件时默认路由可能是 utun，找不到就退而求其次
+	while IFS="$(printf '\t')" read -r name dev; do
+		[ "$dev" = "$default_dev" ] && { echo "$name"; return 0; }
+	done <<EOF
+$(service_pairs)
+EOF
+	# 再按服务顺序找第一个已获得 IPv4 地址的网卡
+	while IFS="$(printf '\t')" read -r name dev; do
+		[ -n "$dev" ] && ipconfig getifaddr "$dev" >/dev/null 2>&1 && { echo "$name"; return 0; }
+	done <<EOF
+$(service_pairs)
+EOF
+	return 1
 }
 echo
 SERVICE="$(active_service || true)"
